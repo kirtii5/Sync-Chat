@@ -1,15 +1,33 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { SignIn, SignUp } from "@clerk/clerk-react";
+import LandingPage from "./Pages/LandingPage";
 import "./App.css";
+import "./auth.css";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <>
-      <div className="text-[100px] font-bold text-blue-500 p-4">SYNC-CHAT</div>
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/login"
+          element={
+            <div className="auth-container">
+              <SignIn />
+            </div>
+          }
+        />
+
+        <Route
+          path="/signup"
+          element={
+            <div className="auth-container">
+              <SignUp />
+            </div>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 

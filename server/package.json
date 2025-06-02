@@ -2,6 +2,7 @@
   "dependencies": {
     "@clerk/clerk-sdk-node": "^4.13.23",
     "body-parser": "^2.2.0",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "mongodb": "^6.16.0",

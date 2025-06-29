@@ -1,14 +1,33 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import { SignIn, SignUp } from "@clerk/clerk-react";
 import LandingPage from "./Pages/LandingPage";
 import "./App.css";
-import "./auth.css";
+import Chat from "./Pages/Chat";
+import Features from "./Pages/Features";
+import About from "./Pages/About";
+import Contact from "./Pages/Contact";
+import Profile from "./Pages/Profile";
+import Navbar from "./components/ui/Navbar";
 
-function App() {
+// Wrapper component to use hooks outside Router
+function AppWrapper() {
+  const location = useLocation();
+
   return (
-    <Router>
+    <>
+      {location.pathname !== "/chat" && <Navbar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/features" element={<Features />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/profile" element={<Profile />} />
         <Route
           path="/login"
           element={
@@ -17,7 +36,6 @@ function App() {
             </div>
           }
         />
-
         <Route
           path="/signup"
           element={
@@ -27,6 +45,14 @@ function App() {
           }
         />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppWrapper />
     </Router>
   );
 }

@@ -7,7 +7,7 @@ import {
 import { SignIn, SignUp } from "@clerk/clerk-react";
 import LandingPage from "./Pages/LandingPage";
 import "./App.css";
-import Chat from "./Pages/Chat";
+import Chat from "./Pages/Chat/Chat";
 import Features from "./Pages/Features";
 import About from "./Pages/About";
 import Contact from "./Pages/Contact";

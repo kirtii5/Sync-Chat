@@ -31,4 +31,4 @@ server.listen(PORT, () => {
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }))
-app.use("/", userRoute);
+app.use("/api/users", userRoute);

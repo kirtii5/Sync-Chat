@@ -9,7 +9,7 @@ const { router } = express();
 // router.get("/feed", optionalAuth, getPublicContent);
 
 router.get('/profile', requireAuth, getOrCreateUser);
-router.get('/users', requireAuth, getAllUser);
+router.get('/allUsers', requireAuth, getAllUser);
 router.patch("/:id/caption", requireAuth, updateCaption);
 
 

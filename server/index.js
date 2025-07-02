@@ -7,6 +7,7 @@ const app = express();
 const  userRoute = require('./routes/userRoute');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const cors = require("cors");
 
 const server = http.createServer(app);
 const io = new Server(server);
@@ -27,7 +28,10 @@ server.listen(PORT, () => {
     console.log(`app is listening to port ${PORT}`);
 })
 
-
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }))

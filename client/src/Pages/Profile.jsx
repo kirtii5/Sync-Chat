@@ -1,74 +1,155 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { LogOut, Pencil, MessageSquare, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
+import axios from "axios";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const [name, setName] = useState("Kirti Choudhary");
-  const [status, setStatus] = useState("Living life one message at a time.");
+  const { getToken, signOut } = useAuth(); 
+
+  const [avatar, setAvatar] = useState(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [caption, setCaption] = useState("");
   const [editing, setEditing] = useState(false);
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = await getToken(); 
+
+        const res = await axios.get("http://localhost:4000/api/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = res.data;
+        setFirstName(data.first_name || "");
+        setLastName(data.last_name || "");
+        setEmail(data.email || "");
+        setCaption(data.caption || "");
+        if (data.profileImage) {
+          setAvatar(data.profileImage);
+        }
+      } catch (err) {
+        console.log("Error fetching profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, [getToken]);
+
   const handleLogout = () => {
+    signOut(); // ✅ use Clerk's signOut from useAuth
     navigate("/");
   };
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatar(URL.createObjectURL(file));
+    }
+  };
+
   return (
-    <div className="bg-[#F5F3FE] flex mt-6 justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md space-y-6">
-        {/* Header */}
-        <h1 className="text-2xl font-bold text-center">Profile</h1>
+    <div className="h-screen w-full flex justify-center items-center bg-[#F5F3FE]">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md h-[90%] flex flex-col justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-center mb-4">Profile</h1>
 
-        {/* Avatar with Icon */}
-        <div className="flex flex-col items-center">
-          <div className="w-20 h-20 rounded-full bg-[#EDE9FE] flex items-center justify-center border-4 border-[#8C52FF]">
-            <User className="w-10 h-10 text-[#8C52FF]" />
+          <div className="flex flex-col items-center mb-4">
+            <label htmlFor="avatar-upload" className="cursor-pointer">
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt="avatar"
+                  className="w-20 h-20 rounded-full object-cover border-4 border-[#8C52FF]"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-[#EDE9FE] flex items-center justify-center border-4 border-[#8C52FF]">
+                  <User className="w-10 h-10 text-[#8C52FF]" />
+                </div>
+              )}
+            </label>
+            <input
+              type="file"
+              id="avatar-upload"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <p className="text-sm text-[#8C52FF] mt-2">
+              Upload Profile Picture
+            </p>
           </div>
-          <p className="text-sm text-[#8C52FF] mt-2">Change Icon</p>
-        </div>
 
-        {/* Editable Fields */}
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-[#555]">Your Name</label>
-            <div className="flex items-center gap-2">
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium text-[#555]">
+                First Name
+              </label>
               <Input
-                className="mt-1"
-                value={name}
+                value={firstName}
                 disabled={!editing}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <Pencil
-                className="w-4 h-4 text-[#8C52FF] cursor-pointer"
-                onClick={() => setEditing(!editing)}
+                onChange={(e) => setFirstName(e.target.value)}
               />
             </div>
-          </div>
+            <div>
+              <label className="text-sm font-medium text-[#555]">
+                Last Name
+              </label>
+              <Input
+                value={lastName}
+                disabled={!editing}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-[#555]">Email</label>
+              <Input
+                value={email}
+                disabled={!editing}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-[#555]">Caption</label>
+              <Input
+                value={caption}
+                disabled={!editing}
+                onChange={(e) => setCaption(e.target.value)}
+              />
+            </div>
 
-          <div>
-            <label className="text-sm font-medium text-[#555]">Status</label>
-            <Input
-              className="mt-1"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              disabled={!editing}
-            />
+            <Button
+              variant="outline"
+              className="border-[#8C52FF] text-[#8C52FF] w-full flex items-center justify-center gap-2"
+              onClick={() => setEditing(!editing)}
+            >
+              <Pencil className="h-4 w-4" />
+              {editing ? "Done Editing" : "Edit Info"}
+            </Button>
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col gap-3 pt-2">
+        <div className="mt-4 flex flex-col gap-2">
           <Button
             variant="outline"
             className="border-[#8C52FF] text-[#8C52FF] flex items-center gap-2 justify-center"
-            onClick={() => navigate("/chat")}>
+            onClick={() => navigate("/chat")}
+          >
             <MessageSquare className="w-4 h-4" />
             Go to Chats
           </Button>
           <Button
             className="bg-[#8C52FF] hover:bg-[#7A45E5] text-white flex items-center gap-2 justify-center"
-            onClick={handleLogout}>
+            onClick={handleLogout}
+          >
             <LogOut className="w-4 h-4" />
             Logout
           </Button>

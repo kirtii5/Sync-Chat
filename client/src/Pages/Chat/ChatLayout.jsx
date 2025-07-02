@@ -17,6 +17,8 @@ export default function ChatLayout({ ...props }) {
     handleSendMessage,
     messagesEndRef,
     mockChats,
+    searchTerm,
+    setSearchTerm,
   } = props;
 
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
@@ -26,7 +28,10 @@ export default function ChatLayout({ ...props }) {
     setIsMobileChatOpen(true);
   };
 
-  const handleBack = () => setIsMobileChatOpen(false);
+  const handleBack = () => {
+    setIsMobileChatOpen(false);
+    setSelectedChat(null); // <- Reset selected chat on back
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -39,28 +44,36 @@ export default function ChatLayout({ ...props }) {
           selectedChat={selectedChat}
           setSelectedChat={handleChatSelect}
           mockChats={mockChats}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
         />
       </div>
 
       {/* Chat Area */}
-      <div
-        className={`flex-1 flex flex-col bg-card ${
-          isMobileChatOpen ? "block" : "hidden md:flex"
-        }`}>
-        <ChatHeader selectedChat={selectedChat} onBack={handleBack} />
-
-        <ChatMessages
-          messages={messages}
-          isTyping={isTyping}
-          messagesEndRef={messagesEndRef}
-        />
-
-        <ChatInput
-          newMessage={newMessage}
-          setNewMessage={setNewMessage}
-          handleSendMessage={handleSendMessage}
-        />
-      </div>
+      {selectedChat && (
+        <div
+          className={`flex-1 flex flex-col bg-card ${
+            isMobileChatOpen ? "block" : "hidden md:flex"
+          }`}>
+          <ChatHeader selectedChat={selectedChat}>
+            <button
+              onClick={handleBack}
+              className="md:hidden text-sm text-primary px-4 py-2">
+              ← Back
+            </button>
+          </ChatHeader>
+          <ChatMessages
+            messages={messages}
+            isTyping={isTyping}
+            messagesEndRef={messagesEndRef}
+          />
+          <ChatInput
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            handleSendMessage={handleSendMessage}
+          />
+        </div>
+      )}
     </div>
   );
 }

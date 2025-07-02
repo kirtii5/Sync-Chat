@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { MessageCircle, Users, Search } from "lucide-react";
 import { UserMenu } from "@/components/ui/UserMenu";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,12 @@ export default function ChatSidebar({
   setSelectedChat,
   mockChats,
 }) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredChats = mockChats.filter((chat) =>
+    chat.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="w-full md:w-80 border-r border-border flex flex-col bg-card">
       <div className="p-4 border-b border-border">
@@ -25,49 +31,59 @@ export default function ChatSidebar({
         </div>
         <div className="relative mt-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input placeholder="Search..." className="pl-10" />
+          <Input
+            placeholder="Search..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
       <ScrollArea className="flex-1 p-2">
-        {mockChats.map((chat) => (
-          <div
-            key={chat.id}
-            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-muted/40 ${
-              selectedChat.id === chat.id ? "bg-muted/40" : ""
-            }`}
-            onClick={() => setSelectedChat(chat)}>
-            <Avatar>
-              <AvatarImage src={chat.avatar || "/placeholder.svg"} />
-              <AvatarFallback>
-                {chat.type === "group" ? (
-                  <Users className="h-4 w-4" />
-                ) : (
-                  chat.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                )}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <div className="flex justify-between items-center">
-                <p className="font-semibold text-sm truncate">{chat.name}</p>
-                <span className="text-xs text-muted-foreground">
-                  {chat.timestamp}
-                </span>
+        {filteredChats.length === 0 ? (
+          <p className="text-sm text-muted-foreground px-4">No chats found.</p>
+        ) : (
+          filteredChats.map((chat) => (
+            <div
+              key={chat.id}
+              className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-muted/40 ${
+                selectedChat?.id === chat.id ? "bg-muted/40" : ""
+              }`}
+              onClick={() => setSelectedChat(chat)}>
+              <Avatar>
+                <AvatarImage src={chat.avatar || "/placeholder.svg"} />
+                <AvatarFallback>
+                  {chat.type === "group" ? (
+                    <Users className="h-4 w-4" />
+                  ) : (
+                    chat.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .slice(0, 2) || "U"
+                  )}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <p className="font-semibold text-sm truncate">{chat.name}</p>
+                  <span className="text-xs text-muted-foreground">
+                    {chat.timestamp}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
+                  {chat.lastMessage}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {chat.lastMessage}
-              </p>
+              {chat.unreadCount > 0 && (
+                <Badge className="text-xs px-2 py-1 h-5 min-w-[20px] flex justify-center items-center">
+                  {chat.unreadCount}
+                </Badge>
+              )}
             </div>
-            {chat.unreadCount > 0 && (
-              <Badge className="text-xs px-2 py-1 h-5 min-w-[20px] flex justify-center items-center">
-                {chat.unreadCount}
-              </Badge>
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </ScrollArea>
     </div>
   );

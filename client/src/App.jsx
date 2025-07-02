@@ -18,9 +18,12 @@ import Navbar from "./components/ui/Navbar";
 function AppWrapper() {
   const location = useLocation();
 
+  // Routes where Navbar should not be displayed
+  const noNavbarRoutes = ["/chat", "/profile"];
+
   return (
     <>
-      {location.pathname !== "/chat" && <Navbar />}
+      {!noNavbarRoutes.includes(location.pathname) && <Navbar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/chat" element={<Chat />} />

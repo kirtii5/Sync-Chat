@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MessageCircle, Users, Search } from "lucide-react";
 import { UserMenu } from "@/components/ui/UserMenu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 
 export default function ChatSidebar({
   selectedChat,
@@ -12,12 +14,27 @@ export default function ChatSidebar({
   mockChats,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [allUsers, setAllUsers] = useState([]);
+  const{getToken} = useAuth();
 
-  const filteredChats = mockChats.filter((chat) =>
-    chat.name.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const token = await getToken();
+      const res = await axios.get("http://localhost:4000/api/users/allUsers",{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }}
+      );
+      setAllUsers(res.data);
+    };
+    fetchUsers();
+  },[getToken]);
+
+  const filteredUsers = allUsers.filter((user) =>
+    user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
+   return (
     <div className="w-full md:w-80 border-r border-border flex flex-col bg-card">
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
@@ -41,46 +58,27 @@ export default function ChatSidebar({
       </div>
 
       <ScrollArea className="flex-1 p-2">
-        {filteredChats.length === 0 ? (
-          <p className="text-sm text-muted-foreground px-4">No chats found.</p>
+        {filteredUsers.length === 0 ? (
+          <p className="text-sm text-muted-foreground px-4">No users found.</p>
         ) : (
-          filteredChats.map((chat) => (
+          filteredUsers.map((user) => (
             <div
-              key={chat.id}
-              className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-muted/40 ${
-                selectedChat?.id === chat.id ? "bg-muted/40" : ""
-              }`}
-              onClick={() => setSelectedChat(chat)}>
+              key={user._id}
+              className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-muted/40"
+              onClick={() => setSelectedChat(user)}
+            >
               <Avatar>
-                <AvatarImage src={chat.avatar || "/placeholder.svg"} />
+                <AvatarImage src={user.profileImage || "/placeholder.svg"} />
                 <AvatarFallback>
-                  {chat.type === "group" ? (
-                    <Users className="h-4 w-4" />
-                  ) : (
-                    chat.name
-                      ?.split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2) || "U"
-                  )}
+                  {user.username[0]}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex justify-between items-center">
-                  <p className="font-semibold text-sm truncate">{chat.name}</p>
-                  <span className="text-xs text-muted-foreground">
-                    {chat.timestamp}
-                  </span>
+                  <p className="font-semibold text-sm truncate">{user.username}</p>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {chat.lastMessage}
-                </p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               </div>
-              {chat.unreadCount > 0 && (
-                <Badge className="text-xs px-2 py-1 h-5 min-w-[20px] flex justify-center items-center">
-                  {chat.unreadCount}
-                </Badge>
-              )}
             </div>
           ))
         )}
@@ -88,3 +86,4 @@ export default function ChatSidebar({
     </div>
   );
 }
+

@@ -8,7 +8,9 @@ import axios from "axios";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { getToken, signOut } = useAuth(); 
+  const { getToken, signOut } = useAuth();
+
+  const [userId, setUserId] = useState("");
 
   const [avatar, setAvatar] = useState(null);
   const [firstName, setFirstName] = useState("");
@@ -20,8 +22,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = await getToken(); 
-
+        const token = await getToken();
         const res = await axios.get("http://localhost:4000/api/users/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -29,6 +30,7 @@ export default function Profile() {
         });
 
         const data = res.data;
+        setUserId(data._id);
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
         setEmail(data.email || "");
@@ -45,14 +47,35 @@ export default function Profile() {
   }, [getToken]);
 
   const handleLogout = () => {
-    signOut(); // ✅ use Clerk's signOut from useAuth
+    signOut();
     navigate("/");
   };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAvatar(URL.createObjectURL(file));
+      setAvatar(file);
+    }
+  };
+
+  const handleUpdateCaption = async () => {
+    try {
+      const token = await getToken();
+      await axios.patch(
+        `http://localhost:4000/api/users/${userId}/caption`,
+        { caption },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setEditing(false);
+      alert("Caption updated successfully!");
+    } catch (error) {
+      console.error("Error updating caption:", error);
+      alert("Failed to update caption.");
     }
   };
 
@@ -66,7 +89,11 @@ export default function Profile() {
             <label htmlFor="avatar-upload" className="cursor-pointer">
               {avatar ? (
                 <img
-                  src={avatar}
+                  src={
+                    avatar instanceof File
+                      ? URL.createObjectURL(avatar)
+                      : avatar
+                  }
                   alt="avatar"
                   className="w-20 h-20 rounded-full object-cover border-4 border-[#8C52FF]"
                 />
@@ -93,29 +120,17 @@ export default function Profile() {
               <label className="text-sm font-medium text-[#555]">
                 First Name
               </label>
-              <Input
-                value={firstName}
-                disabled={!editing}
-                onChange={(e) => setFirstName(e.target.value)}
-              />
+              <Input value={firstName} disabled />
             </div>
             <div>
               <label className="text-sm font-medium text-[#555]">
                 Last Name
               </label>
-              <Input
-                value={lastName}
-                disabled={!editing}
-                onChange={(e) => setLastName(e.target.value)}
-              />
+              <Input value={lastName} disabled />
             </div>
             <div>
               <label className="text-sm font-medium text-[#555]">Email</label>
-              <Input
-                value={email}
-                disabled={!editing}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <Input value={email} disabled />
             </div>
             <div>
               <label className="text-sm font-medium text-[#555]">Caption</label>
@@ -129,10 +144,15 @@ export default function Profile() {
             <Button
               variant="outline"
               className="border-[#8C52FF] text-[#8C52FF] w-full flex items-center justify-center gap-2"
-              onClick={() => setEditing(!editing)}
-            >
+              onClick={() => {
+                if (editing) {
+                  handleUpdateCaption(); // ✅ Only updates caption
+                } else {
+                  setEditing(true);
+                }
+              }}>
               <Pencil className="h-4 w-4" />
-              {editing ? "Done Editing" : "Edit Info"}
+              {editing ? "Done Editing" : "Edit Caption"}
             </Button>
           </div>
         </div>
@@ -141,15 +161,13 @@ export default function Profile() {
           <Button
             variant="outline"
             className="border-[#8C52FF] text-[#8C52FF] flex items-center gap-2 justify-center"
-            onClick={() => navigate("/chat")}
-          >
+            onClick={() => navigate("/chat")}>
             <MessageSquare className="w-4 h-4" />
             Go to Chats
           </Button>
           <Button
             className="bg-[#8C52FF] hover:bg-[#7A45E5] text-white flex items-center gap-2 justify-center"
-            onClick={handleLogout}
-          >
+            onClick={handleLogout}>
             <LogOut className="w-4 h-4" />
             Logout
           </Button>

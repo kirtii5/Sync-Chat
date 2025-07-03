@@ -35,7 +35,7 @@ function AppWrapper() {
           path="/login"
           element={
             <div className="auth-container">
-              <SignIn />
+              <SignIn afterSignInUrl="/profile" />
             </div>
           }
         />
@@ -43,7 +43,7 @@ function AppWrapper() {
           path="/signup"
           element={
             <div className="auth-container">
-              <SignUp />
+              <SignUp afterSignUpUrl="/profile" />
             </div>
           }
         />

@@ -45,7 +45,7 @@ export default function ChatLayout({
         />
       </div>
 
-      {/* Chat Area */}
+      {/* Chat area */}
       {selectedChat && (
         <div
           className={`flex-1 flex flex-col bg-card ${
@@ -58,11 +58,13 @@ export default function ChatLayout({
               ← Back
             </button>
           </ChatHeader>
+
           <ChatMessages
             messages={messages}
             isTyping={isTyping}
             messagesEndRef={messagesEndRef}
           />
+
           <ChatInput
             newMessage={newMessage}
             setNewMessage={setNewMessage}

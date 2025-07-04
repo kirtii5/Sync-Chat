@@ -1,6 +1,6 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Video, Info, MoreVertical, Users } from "lucide-react";
+import { Phone, Video, Info, MoreVertical, User } from "lucide-react";
 
 export default function ChatHeader({ selectedChat, onBack }) {
   return (
@@ -13,8 +13,14 @@ export default function ChatHeader({ selectedChat, onBack }) {
         </button>
 
         <Avatar className="h-9 w-9">
-          <AvatarImage src={selectedChat?.profileImage || "/placeholder.svg"} />
-          <AvatarFallback>{selectedChat?.username?.[0] || "U"}</AvatarFallback>
+          <AvatarImage
+            src={selectedChat?.profileImage || undefined}
+            alt={selectedChat?.username}
+            className="object-cover"
+          />
+          <AvatarFallback className="bg-muted flex items-center justify-center">
+            <User className="w-4 h-4 text-muted-foreground" />
+          </AvatarFallback>
         </Avatar>
 
         <div>

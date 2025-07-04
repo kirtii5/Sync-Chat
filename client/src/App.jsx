@@ -13,6 +13,8 @@ import About from "./Pages/About";
 import Contact from "./Pages/Contact";
 import Profile from "./Pages/Profile";
 import Navbar from "./components/ui/Navbar";
+import ProtectedRoute from "./components/ui/ProtectedRoute";
+import { Toaster } from "sonner";
 
 // Wrapper component to use hooks outside Router
 function AppWrapper() {
@@ -23,14 +25,29 @@ function AppWrapper() {
 
   return (
     <>
+      <Toaster position="top-center" richColors />
       {!noNavbarRoutes.includes(location.pathname) && <Navbar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/chat" element={<Chat />} />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/features" element={<Features />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/login"
           element={

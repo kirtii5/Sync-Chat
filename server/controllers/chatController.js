@@ -1,7 +1,8 @@
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 
-exports.createChat = async (req, res) => {
+// create chat or member
+const createChat = async (req, res) => {
   try {
     const currentUserId = req.auth.userId; //from your requireAuth
     const currentUser = await User.findOne({ clerkId: currentUserId });
@@ -27,3 +28,18 @@ exports.createChat = async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
+//curr user chats
+const getChatsForUser = async(req, res) => {
+  try {
+    let currentUserId = req.auth.userId;
+    const currentUser = await User.findOne({ clerkId: currentUserId });
+    let chats = await Chat.find({ members: currentUser}).populate("members", "username email");
+    res.status(200).json(chats);
+  } catch(err) {
+    console.log(err);
+    res.status(500).json({message: "internal server error"});
+  }
+}
+
+module.exports = {createChat, getChatsForUser};

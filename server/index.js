@@ -5,6 +5,7 @@ const http = require('http');
 const { Server } = require("socket.io");
 const app = express();
 const  userRoute = require('./routes/userRoute');
+const chatRoute = require("./routes/chatRoute");
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const cors = require("cors");
@@ -36,3 +37,4 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use("/api/users", userRoute);
+app.use("/api/chats", chatRoute);

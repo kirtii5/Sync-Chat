@@ -73,7 +73,7 @@ const updateCaption = async(req, res) => {
 const getAllUser = async (req, res) => {
   try {
     const { userId } = req.auth;
-    const users = await User.find({ clerkId: { $ne: userId } });
+    const users = await User.find({ clerkId: { $ne: userId } }); //Mujhe sab users do jinke clerkId ka value userId ke equal nahi hai."
     res.json(users);
   } catch (err) {
     console.log(err);

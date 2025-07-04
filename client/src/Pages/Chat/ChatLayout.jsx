@@ -4,23 +4,20 @@ import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 
-export default function ChatLayout({ ...props }) {
-  const {
-    selectedChat,
-    setSelectedChat,
-    messages,
-    setMessages,
-    newMessage,
-    setNewMessage,
-    isTyping,
-    setIsTyping,
-    handleSendMessage,
-    messagesEndRef,
-    mockChats,
-    searchTerm,
-    setSearchTerm,
-  } = props;
-
+export default function ChatLayout({
+  selectedChat,
+  setSelectedChat,
+  messages,
+  setMessages,
+  newMessage,
+  setNewMessage,
+  isTyping,
+  setIsTyping,
+  handleSendMessage,
+  messagesEndRef,
+  chatUsers,
+  addUserToChat,
+}) {
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
   const handleChatSelect = (chat) => {
@@ -30,7 +27,7 @@ export default function ChatLayout({ ...props }) {
 
   const handleBack = () => {
     setIsMobileChatOpen(false);
-    setSelectedChat(null); // <- Reset selected chat on back
+    setSelectedChat(null);
   };
 
   return (
@@ -43,9 +40,8 @@ export default function ChatLayout({ ...props }) {
         <ChatSidebar
           selectedChat={selectedChat}
           setSelectedChat={handleChatSelect}
-          mockChats={mockChats}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          chatUsers={chatUsers}
+          addUserToChat={addUserToChat}
         />
       </div>
 

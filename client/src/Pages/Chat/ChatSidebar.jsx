@@ -16,7 +16,7 @@ export default function ChatSidebar({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
-  const { userId, getToken } = useAuth();
+  const { userId, getToken } = useAuth(); // Clerk userId
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -36,7 +36,7 @@ export default function ChatSidebar({
 
         const filtered = res.data.filter(
           (user) =>
-            user._id !== userId &&
+            user.clerkId !== userId &&
             user.username.toLowerCase().includes(search.toLowerCase())
         );
         setResults(filtered);
@@ -129,14 +129,16 @@ export default function ChatSidebar({
           </div>
         )}
 
-        {/* Existing Chat Users */}
-        {chatUsers.filter((user) => user._id !== userId).length === 0 && (
+        {/* Chat Users (Exclude self even if backend includes them) */}
+        {chatUsers.filter((user) => user.clerkId && user.clerkId !== userId)
+          .length === 0 && (
           <p className="text-sm text-center text-muted-foreground mt-4">
             No chats added yet.
           </p>
         )}
+
         {chatUsers
-          .filter((user) => user._id !== userId)
+          .filter((user) => user.clerkId && user.clerkId !== userId)
           .map((user) => (
             <div
               key={user._id}

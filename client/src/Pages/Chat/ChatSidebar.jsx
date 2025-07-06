@@ -11,12 +11,13 @@ export default function ChatSidebar({
   selectedChat,
   setSelectedChat,
   chatUsers,
-  addUserToChat,
+  setChats,
+  fetchChats,
 }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
-  const { userId, getToken } = useAuth(); // Clerk userId
+  const { userId, getToken } = useAuth();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -39,6 +40,7 @@ export default function ChatSidebar({
             user.clerkId !== userId &&
             user.username.toLowerCase().includes(search.toLowerCase())
         );
+
         setResults(filtered);
       } catch (err) {
         console.error("Search error:", err);
@@ -50,29 +52,64 @@ export default function ChatSidebar({
   }, [search, getToken, userId]);
 
   const handleUserClick = async (user) => {
+    if (user.clerkId === userId) return;
+
     try {
       const token = await getToken();
-      await axios.post(
-        "http://localhost:4000/api/chats/chat",
-        { otherUserId: user._id },
+
+      // ✅ Use working endpoint to get or create logged-in user
+      const userRes = await axios.get(
+        "http://localhost:4000/api/users/profile",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      addUserToChat(user);
+      const currentUserInDB = userRes.data;
+      if (!currentUserInDB || !currentUserInDB._id) {
+        alert("⚠️ You are not in the system yet. Please ask admin to add you.");
+        return;
+      }
+
+      // ✅ Create or fetch chat with clicked user
+      const res = await axios.post(
+        "http://localhost:4000/api/chats/chat",
+        { otherUserId: user._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const chat = res.data;
+
+      const newChatUser = {
+        _id: user._id,
+        username: user.username || "Unknown",
+        profileImage: user.profileImage || "",
+        caption: user.caption || "Hey there!",
+        clerkId: user.clerkId,
+        chatId: chat._id,
+      };
+
+      setChats((prev) => {
+        const exists = prev.find((u) => u._id === newChatUser._id);
+        return exists ? prev : [...prev, newChatUser];
+      });
+
+      setSelectedChat(newChatUser);
       setSearch("");
       setIsSearchOpen(false);
     } catch (err) {
-      console.error("Failed to create chat:", err);
+      console.error("❌ Chat creation failed:", err);
     }
   };
 
+  const filteredChatUsers = chatUsers.filter(
+    (user, index, self) =>
+      user.clerkId !== userId &&
+      index === self.findIndex((u) => u._id === user._id)
+  );
+
   return (
     <div className="flex flex-col h-full border-r border-border bg-card">
-      {/* Header */}
       <div className="p-4 flex justify-between items-center">
         <h2 className="text-lg font-semibold">Sync-Chat</h2>
         <Button
@@ -87,7 +124,6 @@ export default function ChatSidebar({
         </Button>
       </div>
 
-      {/* Search input */}
       {isSearchOpen && (
         <div className="px-4 pb-2">
           <Input
@@ -99,8 +135,7 @@ export default function ChatSidebar({
       )}
 
       <ScrollArea className="flex-1">
-        {/* Search Results */}
-        {isSearchOpen && search.length > 0 && results.length > 0 && (
+        {isSearchOpen && results.length > 0 && (
           <div className="px-4 py-2 border-b border-border">
             {results.map((user) => (
               <div
@@ -117,11 +152,10 @@ export default function ChatSidebar({
                     <User className="w-5 h-5 text-muted-foreground" />
                   </AvatarFallback>
                 </Avatar>
-
                 <div>
                   <p className="font-medium">{user.username}</p>
                   <p className="text-sm text-muted-foreground">
-                    {user.caption}
+                    {user.caption || "Hey there!"}
                   </p>
                 </div>
               </div>
@@ -129,41 +163,37 @@ export default function ChatSidebar({
           </div>
         )}
 
-        {/* Chat Users (Exclude self even if backend includes them) */}
-        {chatUsers.filter((user) => user.clerkId && user.clerkId !== userId)
-          .length === 0 && (
+        {filteredChatUsers.length === 0 && (
           <p className="text-sm text-center text-muted-foreground mt-4">
-            No chats added yet.
+            No chats yet.
           </p>
         )}
 
-        {chatUsers
-          .filter((user) => user.clerkId && user.clerkId !== userId)
-          .map((user) => (
-            <div
-              key={user._id}
-              className={`flex items-center p-3 hover:bg-accent cursor-pointer ${
-                selectedChat?._id === user._id ? "bg-accent" : ""
-              }`}
-              onClick={() => setSelectedChat(user)}>
-              <Avatar className="w-10 h-10">
-                <AvatarImage
-                  src={user.profileImage || undefined}
-                  alt={user.username}
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-muted flex items-center justify-center">
-                  <User className="w-5 h-5 text-muted-foreground" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="ml-3">
-                <p className="font-medium">{user.username}</p>
-                <p className="text-muted-foreground text-sm">
-                  {user.caption || "Hey there!"}
-                </p>
-              </div>
+        {filteredChatUsers.map((user) => (
+          <div
+            key={user._id}
+            className={`flex items-center p-3 hover:bg-accent cursor-pointer ${
+              selectedChat?._id === user._id ? "bg-accent" : ""
+            }`}
+            onClick={() => setSelectedChat(user)}>
+            <Avatar className="w-10 h-10">
+              <AvatarImage
+                src={user.profileImage || undefined}
+                alt={user.username}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-muted flex items-center justify-center">
+                <User className="w-5 h-5 text-muted-foreground" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="ml-3">
+              <p className="font-medium">{user.username}</p>
+              <p className="text-muted-foreground text-sm">
+                {user.caption || "Hey there!"}
+              </p>
             </div>
-          ))}
+          </div>
+        ))}
       </ScrollArea>
     </div>
   );

@@ -3,6 +3,7 @@ import ChatSidebar from "./ChatSidebar";
 import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
+import UserSearchModal from "@/components/ui/UserSearchModal";
 
 export default function ChatLayout({
   selectedChat,
@@ -16,62 +17,84 @@ export default function ChatLayout({
   handleSendMessage,
   messagesEndRef,
   chatUsers,
-  addUserToChat,
+  setChats,
+  fetchChats,
+  getToken,
 }) {
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleChatSelect = (chat) => {
     setSelectedChat(chat);
     setIsMobileChatOpen(true);
   };
-
   const handleBack = () => {
     setIsMobileChatOpen(false);
     setSelectedChat(null);
   };
 
+  const addUserToChat = (user) => {
+    // Called by search modal
+    // call backend to create chat:
+    axios
+      .post(
+        "http://localhost:4000/api/chats/chat",
+        { otherUserId: user._id },
+        { headers: { Authorization: `Bearer ${getToken()}` } }
+      )
+      .then(() => fetchChats())
+      .catch(console.error);
+  };
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <div
-        className={`w-full md:w-80 bg-card border-r border-border ${
-          isMobileChatOpen ? "hidden md:block" : "block"
-        }`}>
-        <ChatSidebar
-          selectedChat={selectedChat}
-          setSelectedChat={handleChatSelect}
-          chatUsers={chatUsers}
-          addUserToChat={addUserToChat}
-        />
-      </div>
+    <>
+      <UserSearchModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        addUserToChat={addUserToChat}
+      />
 
-      {/* Chat area */}
-      {selectedChat && (
+      <div className="flex h-screen overflow-hidden">
         <div
-          className={`flex-1 flex flex-col bg-card ${
-            isMobileChatOpen ? "block" : "hidden md:flex"
+          className={`w-full md:w-80 bg-card border-r border-border ${
+            isMobileChatOpen ? "hidden md:block" : "block"
           }`}>
-          <ChatHeader selectedChat={selectedChat}>
-            <button
-              onClick={handleBack}
-              className="md:hidden text-sm text-primary px-4 py-2">
-              ← Back
-            </button>
-          </ChatHeader>
-
-          <ChatMessages
-            messages={messages}
-            isTyping={isTyping}
-            messagesEndRef={messagesEndRef}
-          />
-
-          <ChatInput
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            handleSendMessage={handleSendMessage}
+          <ChatSidebar
+            setIsModalOpen={setIsModalOpen}
+            selectedChat={selectedChat}
+            setSelectedChat={handleChatSelect}
+            chatUsers={chatUsers}
+            setChats={setChats}
+            fetchChats={fetchChats}
           />
         </div>
-      )}
-    </div>
+
+        {selectedChat && (
+          <div
+            className={`flex-1 flex flex-col bg-card ${
+              isMobileChatOpen ? "block" : "hidden md:flex"
+            }`}>
+            <ChatHeader selectedChat={selectedChat}>
+              <button
+                onClick={handleBack}
+                className="md:hidden text-sm text-primary px-4 py-2">
+                ← Back
+              </button>
+            </ChatHeader>
+
+            <ChatMessages
+              messages={messages}
+              isTyping={isTyping}
+              messagesEndRef={messagesEndRef}
+            />
+            <ChatInput
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              handleSendMessage={handleSendMessage}
+            />
+          </div>
+        )}
+      </div>
+    </>
   );
 }

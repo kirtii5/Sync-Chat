@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import ChatLayout from "./ChatLayout";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
-import { toast } from "sonner";
 
 export default function Chat() {
   const [selectedChat, setSelectedChat] = useState(null);
@@ -11,90 +10,96 @@ export default function Chat() {
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-
-  const { getToken, isLoaded } = useAuth();
+  const { getToken, userId } = useAuth();
+  const { user, isLoaded } = useUser();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (selectedChat) {
-      setMessages([]); // simulate loading messages for selected chat
-    }
-  }, [selectedChat]);
+    if (isLoaded && userId) fetchChats();
+  }, [isLoaded, userId]);
 
-  useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        const token = await getToken();
-        const res = await axios.get(
-          "http://localhost:4000/api/chats/Allchats",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  // const fetchChats = async () => {
+  //   try {
+  //     const token = await getToken();
+  //     const res = await axios.get("http://localhost:4000/api/chats/Allchats", {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
 
-        const users = res.data.map((chat) => {
-          const otherUser = chat.members.find(
-            (member) => member._id !== chat.members[0]?._id
+  //     const rawChats = res.data;
+
+  //     const loggedInEmail =
+  //       user?.primaryEmailAddress?.emailAddress?.toLowerCase();
+
+  //     const formatted = rawChats
+  //       .filter((chat) => {
+  //         // Only include chats where the first member is the logged-in user
+  //         return chat.members?.[0]?.email === loggedInEmail;
+  //       })
+  //       .map((chat) => {
+  //         const otherUser = chat.members?.[1]; // the other person is at index 1
+  //         if (!otherUser) return null;
+
+  //         return {
+  //           _id: otherUser._id,
+  //           username: otherUser.username || "Unknown",
+  //           profileImage: otherUser.profileImage || "",
+  //           caption: otherUser.caption || "Hey there!",
+  //           clerkId: otherUser.clerkId,
+  //           email: otherUser.email,
+  //           chatId: chat._id,
+  //         };
+  //       })
+  //       .filter(Boolean); // remove nulls
+
+  //     setChats(formatted);
+  //   } catch (err) {
+  //     console.error("❌ Error fetching chats:", err);
+  //   }
+  // };
+
+  const fetchChats = async () => {
+    try {
+      const token = await getToken();
+      const res = await axios.get("http://localhost:4000/api/chats/Allchats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const rawChats = res.data;
+
+      const loggedInEmail =
+        user?.primaryEmailAddress?.emailAddress?.toLowerCase();
+
+      const formatted = rawChats
+        .filter((chat) => {
+          // show chat if the logged-in user is in members array
+          return chat.members?.some((member) => member.email === loggedInEmail);
+        })
+        .map((chat) => {
+          const otherUser = chat.members?.find(
+            (m) => m.email !== loggedInEmail
           );
+          if (!otherUser) return null;
+
           return {
             _id: otherUser._id,
-            username: otherUser.username,
-            profileImage: otherUser.profileImage,
+            username: otherUser.username || "Unknown",
+            profileImage: otherUser.profileImage || "",
             caption: otherUser.caption || "Hey there!",
+            clerkId: otherUser.clerkId,
+            email: otherUser.email,
+            chatId: chat._id,
           };
-        });
+        })
+        .filter(Boolean); // remove nulls
+      // remove nulls
 
-        setChats(users);
-      } catch (error) {
-        console.error("❌ Failed to fetch chats:", error);
-      }
-    };
-
-    if (isLoaded) fetchChats(); // wait until auth is loaded
-  }, [isLoaded, getToken]);
-
-  const addUserToChat = (user) => {
-    const alreadyExists = chats.find((u) => u._id === user._id);
-    if (!alreadyExists) {
-      setChats((prev) => [...prev, user]);
+      setChats(formatted);
+    } catch (err) {
+      console.error("❌ Error fetching chats:", err);
     }
-    setSelectedChat(user);
-  };
-
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    const message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      sender: "You",
-      timestamp: new Date(),
-      isOwn: true,
-    };
-
-    setMessages((prev) => [...prev, message]);
-    setNewMessage("");
-
-    toast.success("Your message has been delivered.");
-
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const response = {
-        id: (Date.now() + 1).toString(),
-        content: "Thanks! I'll get back to you.",
-        sender: selectedChat.username,
-        timestamp: new Date(),
-        isOwn: false,
-      };
-      setMessages((prev) => [...prev, response]);
-    }, 1500);
   };
 
   return (
@@ -107,10 +112,10 @@ export default function Chat() {
       setNewMessage={setNewMessage}
       isTyping={isTyping}
       setIsTyping={setIsTyping}
-      handleSendMessage={handleSendMessage}
       messagesEndRef={messagesEndRef}
       chatUsers={chats}
-      addUserToChat={addUserToChat}
+      setChats={setChats}
+      fetchChats={fetchChats}
     />
   );
 }

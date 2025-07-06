@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const axios = require("axios");
+const ExpressError = require("../utils/ExpressError");
 
 
 const getProfile = (req, res) => {
@@ -18,10 +19,9 @@ const getPublicContent = (req, res) => {
 
 //  Clerk se user nikaal ke MongoDB mein save karo
 const getOrCreateUser = async (req, res) => {
-  try {
     const { userId } = req.auth;
 
-    if (!userId) return res.status(401).json({ message: "Unauthorized user" });
+    if (!userId) throw new ExpressError(401,"Unauthorized user");
 
     let user = await User.findOne({ clerkId: userId });
     if (!user) {
@@ -45,40 +45,25 @@ const getOrCreateUser = async (req, res) => {
         last_name: clerkUser.last_name,
       });
     }
-
     res.json(user);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
 };
 
 const updateCaption = async(req, res) => {
-  try {
     const { caption } = req.body;
     const {userId} = req.auth;
     const user = await User.findOne({ clerkId: userId });
-    if(!user) res.json({message: "user not found"});
+    if(!user) throw new ExpressError(404, "User not found");
     user.caption = caption;
     await user.save();
     res.json({ message: "Caption updated successfully", user });
-  } catch(err) {
-    console.log(err);
-    res.status(500).json({message: "internal server error"});
-  }
-    
+ 
 } 
 
 // Get all users except self
 const getAllUser = async (req, res) => {
-  try {
     const { userId } = req.auth;
     const users = await User.find({ clerkId: { $ne: userId } }); //Mujhe sab users do jinke clerkId ka value userId ke equal nahi hai."
     res.json(users);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
 };
 
 module.exports = { getProfile, getPublicContent, getAllUser, getOrCreateUser, updateCaption };

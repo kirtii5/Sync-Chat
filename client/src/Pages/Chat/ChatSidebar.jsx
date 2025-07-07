@@ -4,20 +4,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import axios from "axios";
-import { useAuth } from "@clerk/clerk-react";
-import { User, Search, X } from "lucide-react";
+import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
+import { User, MessageCircle, Search, X } from "lucide-react";
+import { UserMenu } from "@/components/ui/UserMenu";
 
 export default function ChatSidebar({
   selectedChat,
   setSelectedChat,
   chatUsers,
   setChats,
-  fetchChats,
 }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
   const { userId, getToken } = useAuth();
+  const { user } = useUser();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -111,7 +112,11 @@ export default function ChatSidebar({
   return (
     <div className="flex flex-col h-full border-r border-border bg-card">
       <div className="p-4 flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Sync-Chat</h2>
+        <UserMenu />
+        <div className="flex justify-center items-center">
+          <MessageCircle className="h-6 w-6 text-primary" />
+          <h1 className="text-xl font-bold"> Sync-Chat</h1>
+        </div>
         <Button
           onClick={() => setIsSearchOpen((prev) => !prev)}
           size="icon"
@@ -123,7 +128,6 @@ export default function ChatSidebar({
           )}
         </Button>
       </div>
-
       {isSearchOpen && (
         <div className="px-4 pb-2">
           <Input
@@ -134,6 +138,7 @@ export default function ChatSidebar({
         </div>
       )}
 
+      <hr />
       <ScrollArea className="flex-1">
         {isSearchOpen && results.length > 0 && (
           <div className="px-4 py-2 border-b border-border">

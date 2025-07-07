@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk, useUser } from "@clerk/clerk-react";
 
 import {
   DropdownMenu,
@@ -15,8 +15,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Settings, User } from "lucide-react";
 
 export function UserMenu() {
-  const navigate = useNavigate();
   const { signOut } = useClerk();
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const userImageUrl = user.imageUrl;
 
   const handleLogout = async () => {
     await signOut();
@@ -26,9 +28,12 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="h-9 w-9 cursor-pointer">
-          <AvatarImage src="/avatar.jpg" alt="User Avatar" />
-          <AvatarFallback>U</AvatarFallback>
+        <Avatar className="w-8 h-8 cursor-pointer">
+          <AvatarImage
+            src={userImageUrl != user.imageUrl && user.imageUrl}
+            alt="User"
+          />
+          <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 

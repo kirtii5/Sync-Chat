@@ -3,7 +3,6 @@ import ChatSidebar from "./ChatSidebar";
 import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
-import UserSearchModal from "@/components/ui/UserSearchModal";
 
 export default function ChatLayout({
   selectedChat,
@@ -18,11 +17,9 @@ export default function ChatLayout({
   messagesEndRef,
   chatUsers,
   setChats,
-  fetchChats,
   getToken,
 }) {
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleChatSelect = (chat) => {
     setSelectedChat(chat);
@@ -30,42 +27,31 @@ export default function ChatLayout({
   };
   const handleBack = () => {
     setIsMobileChatOpen(false);
-    setSelectedChat(null);
+    setTimeout(() => setSelectedChat(null), 200);
   };
 
-  const addUserToChat = (user) => {
-    // Called by search modal
-    // call backend to create chat:
-    axios
-      .post(
-        "http://localhost:4000/api/chats/chat",
-        { otherUserId: user._id },
-        { headers: { Authorization: `Bearer ${getToken()}` } }
-      )
-      .then(() => fetchChats())
-      .catch(console.error);
+  const handleDeleteChat = () => {
+    // Remove from sidebar list
+    setChats((prevChats) =>
+      prevChats.filter((c) => c._id !== selectedChat._id)
+    );
+    // Close chat window
+    setSelectedChat(null);
+    setIsMobileChatOpen(false);
   };
 
   return (
     <>
-      <UserSearchModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        addUserToChat={addUserToChat}
-      />
-
       <div className="flex h-screen overflow-hidden">
         <div
           className={`w-full md:w-80 bg-card border-r border-border ${
             isMobileChatOpen ? "hidden md:block" : "block"
           }`}>
           <ChatSidebar
-            setIsModalOpen={setIsModalOpen}
             selectedChat={selectedChat}
             setSelectedChat={handleChatSelect}
             chatUsers={chatUsers}
             setChats={setChats}
-            fetchChats={fetchChats}
           />
         </div>
 
@@ -74,13 +60,11 @@ export default function ChatLayout({
             className={`flex-1 flex flex-col bg-card ${
               isMobileChatOpen ? "block" : "hidden md:flex"
             }`}>
-            <ChatHeader selectedChat={selectedChat}>
-              <button
-                onClick={handleBack}
-                className="md:hidden text-sm text-primary px-4 py-2">
-                ← Back
-              </button>
-            </ChatHeader>
+            <ChatHeader
+              selectedChat={selectedChat}
+              onBack={handleBack}
+              onDelete={handleDeleteChat}
+            />
 
             <ChatMessages
               messages={messages}

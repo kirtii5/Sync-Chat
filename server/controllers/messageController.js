@@ -10,7 +10,7 @@ const sendMessage = async (req, res) => {
   if (!senderInfo) throw new ExpressError(404, "sender not found");
   if (!chatId)
     throw new ExpressError(400, "Chat ID required");
-  if(!text)
+  if (!text)
     throw new ExpressError(400, "text is required");
   const message = await Message.create({
     chatId,
@@ -21,4 +21,17 @@ const sendMessage = async (req, res) => {
   res.status(200).json(message);
 };
 
-module.exports = { sendMessage };
+const getMessagesByChatId = async (req, res) => {
+  const { chatId } = req.params;
+
+  const messages = await Message.find({ chatId })
+    .sort({ createdAt: 1 }) // Optional: sort oldest to newest
+    .populate("sender", "username _id clerkId"); // Populate sender info
+
+  res.status(200).json(messages);
+};
+
+module.exports = {
+  sendMessage,
+  getMessagesByChatId,
+};

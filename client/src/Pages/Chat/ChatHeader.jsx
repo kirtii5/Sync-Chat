@@ -43,6 +43,7 @@ export default function ChatHeader({ selectedChat, onBack, onDelete }) {
       );
       toast.success("Chat deleted");
       onDelete(); // Notify parent to remove chat
+      onBack();
     } catch (err) {
       toast.error("Failed to delete chat");
       console.error(err);

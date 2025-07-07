@@ -13,4 +13,6 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true }
 ); // Automatically adds createdAt & updatedAt
 
+
+
 module.exports = mongoose.model("Message", messageSchema);

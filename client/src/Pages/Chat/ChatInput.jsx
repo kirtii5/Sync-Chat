@@ -10,7 +10,10 @@ export default function ChatInput({
 }) {
   return (
     <form
-      onSubmit={handleSendMessage}
+      onSubmit={(e) => {
+        e.preventDefault(); // 💥 Fixes refresh issue
+        handleSendMessage();
+      }}
       className="p-4 border-t border-border flex gap-2">
       <Input
         placeholder="Type a message..."

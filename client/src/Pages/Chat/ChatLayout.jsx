@@ -31,13 +31,10 @@ export default function ChatLayout({
   };
 
   const handleDeleteChat = () => {
-    // Remove from sidebar list
-    setChats((prevChats) =>
-      prevChats.filter((c) => c._id !== selectedChat._id)
-    );
-    // Close chat window
     setSelectedChat(null);
-    setIsMobileChatOpen(false);
+    setChats((prevChats) =>
+      prevChats.filter((chat) => chat.chatId !== selectedChat.chatId)
+    );
   };
 
   return (

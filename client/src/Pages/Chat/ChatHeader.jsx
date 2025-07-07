@@ -5,20 +5,20 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/clerk-react";
 
-export default function ChatHeader({ selectedChat, onBack }) {
+export default function ChatHeader({ selectedChat, onBack, onDelete }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef();
   const { getToken } = useAuth();
 
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-  //       setShowDropdown(false);
-  //     }
-  //   };
-  //   document.addEventListener("mousedown", handleClickOutside);
-  //   return () => document.removeEventListener("mousedown", handleClickOutside);
-  // }, []);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -30,26 +30,26 @@ export default function ChatHeader({ selectedChat, onBack }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // const handleDeleteChat = async () => {
-  //   try {
-  //     const token = getToken();
-  //     await axios.delete(
-  //       `http://localhost:4000/api/chats/${selectedChat._id}`,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`, // or pass getToken() from props
-  //         },
-  //       }
-  //     );
-  //     toast.success("Chat deleted");
-  //     onDelete(); // Notify parent to remove chat
-  //   } catch (err) {
-  //     toast.error("Failed to delete chat");
-  //     console.error(err);
-  //   } finally {
-  //     setShowDropdown(false);
-  //   }
-  // };
+  const handleDeleteChat = async () => {
+    try {
+      const token = await getToken();
+      await axios.delete(
+        `http://localhost:4000/api/chats/${selectedChat.chatId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // or pass getToken() from props
+          },
+        }
+      );
+      toast.success("Chat deleted");
+      onDelete(); // Notify parent to remove chat
+    } catch (err) {
+      toast.error("Failed to delete chat");
+      console.error(err);
+    } finally {
+      setShowDropdown(false);
+    }
+  };
 
   return (
     <div className="p-4 border-b border-border flex items-center justify-between bg-card">
@@ -92,7 +92,9 @@ export default function ChatHeader({ selectedChat, onBack }) {
           />
           {showDropdown && (
             <div className="absolute right-0 mt-2 w-40 rounded-md bg-white dark:bg-popover shadow-lg border border-border z-50">
-              <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 dark:hover:bg-red-900 rounded">
+              <button
+                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 dark:hover:bg-red-900 rounded"
+                onClick={handleDeleteChat}>
                 Delete Chat
               </button>
             </div>

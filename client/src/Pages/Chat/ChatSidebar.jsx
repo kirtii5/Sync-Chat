@@ -112,21 +112,23 @@ export default function ChatSidebar({
   return (
     <div className="flex flex-col h-full border-r border-border bg-card">
       <div className="p-4 flex justify-between items-center">
-        <UserMenu />
         <div className="flex justify-center items-center">
           <MessageCircle className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold"> Sync-Chat</h1>
         </div>
-        <Button
-          onClick={() => setIsSearchOpen((prev) => !prev)}
-          size="icon"
-          variant="ghost">
-          {isSearchOpen ? (
-            <X className="w-5 h-5" />
-          ) : (
-            <Search className="w-5 h-5" />
-          )}
-        </Button>
+        <div className="flex items-center space-x-2">
+          <UserMenu />
+          <Button
+            onClick={() => setIsSearchOpen((prev) => !prev)}
+            size="icon"
+            variant="ghost">
+            {isSearchOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Search className="w-5 h-5" />
+            )}
+          </Button>
+        </div>
       </div>
       {isSearchOpen && (
         <div className="px-4 pb-2">

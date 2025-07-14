@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const axios = require("axios");
 const ExpressError = require("../utils/ExpressError");
-
+const multer = require("multer");
 
 const getProfile = (req, res) => {
   const { userId } = req.auth;
@@ -66,4 +66,32 @@ const getAllUser = async (req, res) => {
     res.json(users);
 };
 
-module.exports = { getProfile, getPublicContent, getAllUser, getOrCreateUser, updateCaption };
+// const UpdateprofileImage = async(req, res) => {
+//   const {profileImage} = req.body;
+//   const{userId} = req.auth;
+//   const currUser = await User.findOne({clerkId: userId});
+//    if(!currUser) throw new ExpressError(404, "user not found");
+//    currUser.profileImage = profileImage
+//    await currUser.save();
+//    res.json({message: "profile sets successfully"});
+// }
+
+const updateProfileImage = async (req, res) => {
+  const { userId } = req.auth;
+  if (!req.file) {
+    throw new ExpressError(400, "No file uploaded");
+  }
+  const imageUrl = req.file.path; 
+  const user = await User.findOne({ clerkId: userId });
+  if (!user) {
+    throw new ExpressError(404, "User not found");
+  }
+  user.profileImage = imageUrl;
+  await user.save();
+
+  res.json({ message: "Profile image updated successfully", imageUrl });
+};
+
+
+
+module.exports = { getProfile, getPublicContent, getAllUser, getOrCreateUser, updateCaption, updateProfileImage};

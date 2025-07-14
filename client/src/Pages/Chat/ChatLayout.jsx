@@ -54,7 +54,7 @@ export default function ChatLayout({
 
         {selectedChat && (
           <div
-            className={`flex-1 flex flex-col bg-card ${
+            className={`flex-1 flex flex-col bg-card h-full max-h-screen ${
               isMobileChatOpen ? "block" : "hidden md:flex"
             }`}>
             <ChatHeader

@@ -9,11 +9,18 @@ export default function Chat() {
   const [chats, setChats] = useState([]);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [currentUserMongoId, setCurrentUserMongoId] = useState(null);
   const messagesEndRef = useRef(null);
   const { getToken, userId } = useAuth();
   const { user, isLoaded } = useUser();
-  const socket = io("http://localhost:4000"); // Backend URL
+  const socket = useRef(null);
+
+  useEffect(() => {
+    socket.current = io("http://localhost:4000");
+    return () => {
+      socket.current.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -24,36 +31,128 @@ export default function Chat() {
   }, [isLoaded, userId]);
 
   useEffect(() => {
-    if (selectedChat) {
-      setMessages([]); // Optional: clear old messages
-      socket.emit("join_chat", selectedChat.chatId);
+    if (selectedChat && currentUserMongoId) {
+      fetchMessages(selectedChat.chatId);
+      socket.current.emit("join_chat", selectedChat.chatId);
+
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.chatId === selectedChat.chatId
+            ? { ...chat, unreadCount: 0 }
+            : chat
+        )
+      );
     }
-  }, [selectedChat]);
+  }, [selectedChat, currentUserMongoId]);
 
   useEffect(() => {
-    socket.on("new_message", (message) => {
-      setMessages((prev) => [...prev, message]);
+    socket.current.on("new_message", (message) => {
+      const isOwn = message.sender === currentUserMongoId;
+
+      if (selectedChat?.chatId === message.chatId) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            ...message,
+            isOwn,
+            content: message.text,
+            timestamp: message.createdAt,
+          },
+        ]);
+      }
+
+      setChats((prev) => {
+        const updated = prev.map((chat) => {
+          if (chat.chatId === message.chatId) {
+            const unread =
+              selectedChat?.chatId === chat.chatId
+                ? 0
+                : (chat.unreadCount || 0) + 1;
+            return {
+              ...chat,
+              lastMessage: message.text,
+              lastMessageTime: message.createdAt,
+              unreadCount: unread,
+            };
+          }
+          return chat;
+        });
+
+        return updated.sort(
+          (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+        );
+      });
     });
 
     return () => {
-      socket.off("new_message");
+      socket.current.off("new_message");
     };
-  }, []);
+  }, [selectedChat, currentUserMongoId]);
 
-  // const handleSendMessage = () => {
-  //   if (!newMessage.trim()) return;
+  const fetchMessages = async (chatId) => {
+    try {
+      const token = await getToken();
+      const res = await axios.get(
+        `http://localhost:4000/api/message/${chatId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-  //   const messageObj = {
-  //     content: newMessage,
-  //     timestamp: new Date(),
-  //     isOwn: true,
-  //     chatId: selectedChat.chatId,
-  //   };
+      const fetched = res.data.map((msg) => ({
+        ...msg,
+        isOwn: msg.sender?._id === currentUserMongoId,
+        content: msg.text,
+        timestamp: msg.createdAt,
+      }));
 
-  //   setMessages((prev) => [...prev, messageObj]); // add instantly
-  //   socket.emit("send_message", messageObj); // send to server
-  //   setNewMessage(""); // clear input
-  // };
+      setMessages(fetched);
+    } catch (err) {
+      console.error("❌ Fetch messages failed:", err);
+    }
+  };
+
+  const fetchChats = async () => {
+    try {
+      const token = await getToken();
+      const res = await axios.get("http://localhost:4000/api/chats/Allchats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const rawChats = res.data;
+      const myEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
+
+      const formatted = rawChats
+        .map((chat) => {
+          const me = chat.members.find(
+            (m) => m.email.toLowerCase() === myEmail
+          );
+          const other = chat.members.find(
+            (m) => m.email.toLowerCase() !== myEmail
+          );
+          if (!me || !other) return null;
+          setCurrentUserMongoId(me._id);
+
+          return {
+            _id: other._id,
+            username: other.username,
+            profileImage: other.profileImage,
+            chatId: chat._id,
+            lastMessage: chat.lastMessage?.text || "Start chat...",
+            lastMessageTime: chat.lastMessage?.createdAt || chat.updatedAt,
+            unreadCount: 0, // real-time will update
+          };
+        })
+        .filter(Boolean)
+        .sort(
+          (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+        );
+
+      setChats(formatted);
+    } catch (err) {
+      console.error("❌ Fetch chats failed:", err);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChat) return;
@@ -73,141 +172,26 @@ export default function Chat() {
         }
       );
 
-      const savedMessage = res.data;
+      const saved = res.data;
 
-      // Add the message to the chat UI
       setMessages((prev) => [
         ...prev,
         {
-          ...savedMessage,
+          ...saved,
           isOwn: true,
-          content: savedMessage.text,
-          timestamp: savedMessage.createdAt,
+          content: saved.text,
+          timestamp: saved.createdAt,
         },
       ]);
 
-      // Emit the message via socket for real-time sync
-      socket.emit("send_message", {
-        ...savedMessage,
+      socket.current.emit("send_message", {
+        ...saved,
         chatId: selectedChat.chatId,
       });
 
       setNewMessage("");
-    } catch (error) {
-      console.error("❌ Message send failed:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedChat) {
-      fetchMessages(selectedChat.chatId); // 🔥 Fetch old messages
-      socket.emit("join_chat", selectedChat.chatId); // ✅ Join chat room
-    }
-  }, [selectedChat]);
-
-  const fetchMessages = async (chatId) => {
-    try {
-      const token = await getToken();
-      const res = await axios.get(
-        `http://localhost:4000/api/message/${chatId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const fetchedMessages = res.data.map((msg) => ({
-        ...msg,
-        isOwn: msg.sender === user?.publicMetadata?.mongoId, // or check _id
-        content: msg.text,
-        timestamp: msg.createdAt,
-      }));
-
-      setMessages(fetchedMessages);
     } catch (err) {
-      console.error("❌ Failed to fetch messages:", err);
-    }
-  };
-
-  // const fetchChats = async () => {
-  //   try {
-  //     const token = await getToken();
-  //     const res = await axios.get("http://localhost:4000/api/chats/Allchats", {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     const rawChats = res.data;
-
-  //     const loggedInEmail =
-  //       user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-
-  //     const formatted = rawChats
-  //       .filter((chat) => {
-  //         // Only include chats where the first member is the logged-in user
-  //         return chat.members?.[0]?.email === loggedInEmail;
-  //       })
-  //       .map((chat) => {
-  //         const otherUser = chat.members?.[1]; // the other person is at index 1
-  //         if (!otherUser) return null;
-
-  //         return {
-  //           _id: otherUser._id,
-  //           username: otherUser.username || "Unknown",
-  //           profileImage: otherUser.profileImage || "",
-  //           caption: otherUser.caption || "Hey there!",
-  //           clerkId: otherUser.clerkId,
-  //           email: otherUser.email,
-  //           chatId: chat._id,
-  //         };
-  //       })
-  //       .filter(Boolean); // remove nulls
-
-  //     setChats(formatted);
-  //   } catch (err) {
-  //     console.error("❌ Error fetching chats:", err);
-  //   }
-  // };
-
-  const fetchChats = async () => {
-    try {
-      const token = await getToken();
-      const res = await axios.get("http://localhost:4000/api/chats/Allchats", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const rawChats = res.data;
-
-      const loggedInEmail =
-        user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-
-      const formatted = rawChats
-        .filter((chat) => {
-          // show chat if the logged-in user is in members array
-          return chat.members?.some((member) => member.email === loggedInEmail);
-        })
-        .map((chat) => {
-          const otherUser = chat.members?.find(
-            (m) => m.email !== loggedInEmail
-          );
-          if (!otherUser) return null;
-
-          return {
-            _id: otherUser._id,
-            username: otherUser.username || "Unknown",
-            profileImage: otherUser.profileImage || "",
-            caption: otherUser.caption || "Hey there!",
-            clerkId: otherUser.clerkId,
-            email: otherUser.email,
-            chatId: chat._id,
-          };
-        })
-        .filter(Boolean); // remove nulls
-      // remove nulls
-
-      setChats(formatted);
-    } catch (err) {
-      console.error("❌ Error fetching chats:", err);
+      console.error("❌ Message send failed:", err);
     }
   };
 
@@ -219,8 +203,8 @@ export default function Chat() {
       setMessages={setMessages}
       newMessage={newMessage}
       setNewMessage={setNewMessage}
-      isTyping={isTyping}
-      setIsTyping={setIsTyping}
+      isTyping={false}
+      setIsTyping={() => {}}
       messagesEndRef={messagesEndRef}
       chatUsers={chats}
       setChats={setChats}

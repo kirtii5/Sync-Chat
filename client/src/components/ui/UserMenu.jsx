@@ -33,7 +33,7 @@ export function UserMenu() {
             src={userImageUrl != user.imageUrl && user.imageUrl}
             alt="User"
           />
-          <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
+          <AvatarFallback>{user.firstName[0].toUpperCase()}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 

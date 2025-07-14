@@ -47,7 +47,7 @@ export default function Contact() {
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium mb-1 flex items-center gap-1">
+            <label className=" text-sm font-medium mb-1 flex items-center gap-1">
               <User className="w-4 h-4 text-[#8C52FF]" /> Name
             </label>
             <input
@@ -62,7 +62,7 @@ export default function Contact() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 flex items-center gap-1">
+            <label className=" text-sm font-medium mb-1 flex items-center gap-1">
               <Mail className="w-4 h-4 text-[#8C52FF]" /> Email
             </label>
             <input

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, Pencil, MessageSquare, User } from "lucide-react";
+import { LogOut, Pencil, MessageSquare, User, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +11,6 @@ export default function Profile() {
   const { getToken, signOut } = useAuth();
 
   const [userId, setUserId] = useState("");
-
   const [avatar, setAvatar] = useState(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -23,11 +22,8 @@ export default function Profile() {
     const fetchProfile = async () => {
       try {
         const token = await getToken();
-        console.log(token);
         const res = await axios.get("http://localhost:4000/api/users/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         const data = res.data;
@@ -52,10 +48,31 @@ export default function Profile() {
     navigate("/");
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setAvatar(file);
+    if (!file) return;
+
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("ProfileImage", file);
+
+      const res = await axios.post(
+        "http://localhost:4000/api/users/upload-profile",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setAvatar(res.data.imageUrl);
+      alert("Profile image updated successfully!");
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      alert("Failed to upload image.");
     }
   };
 
@@ -66,9 +83,7 @@ export default function Profile() {
         `http://localhost:4000/api/users/${userId}/caption`,
         { caption },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -147,7 +162,7 @@ export default function Profile() {
               className="border-[#8C52FF] text-[#8C52FF] w-full flex items-center justify-center gap-2"
               onClick={() => {
                 if (editing) {
-                  handleUpdateCaption(); // ✅ Only updates caption
+                  handleUpdateCaption();
                 } else {
                   setEditing(true);
                 }

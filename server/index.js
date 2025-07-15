@@ -26,21 +26,21 @@ const io = new Server(server, {
 
 // ✅ Global Socket.IO connection
 io.on("connection", (socket) => {
-    console.log("🟢 A user connected");
+    console.log("A user connected");
 
     socket.on("join_chat", (chatId) => {
         socket.join(chatId);
-        console.log(`👤 User joined chat: ${chatId}`);
+        console.log(`User joined chat: ${chatId}`);
     });
 
     socket.on("send_message", (messageData) => {
         const { chatId, ...message } = messageData;
         io.to(chatId).emit("new_message", message);
-        console.log("📨 Message sent to room:", chatId);
+        console.log(" Message sent to room:", chatId);
     });
 
     socket.on("disconnect", () => {
-        console.log("🔴 A user disconnected");
+        console.log(" A user disconnected");
     });
 });
 
@@ -72,16 +72,16 @@ app.use((err, req, res, next) => {
     res.status(status).json({ message });
 });
 
-// ✅ Connect to MongoDB
+
 mongoose.connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-    .then(() => console.log("✅ Connected to MongoDB"))
-    .catch((err) => console.error("❌ MongoDB Error:", err));
+    .then(() => console.log(" Connected to MongoDB"))
+    .catch((err) => console.error("MongoDB Error:", err));
 
 // ✅ Start the server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
-    console.log(`🚀 Server listening on http://localhost:${PORT}`);
+    console.log(`Server listening on http://localhost:${PORT}`);
 });

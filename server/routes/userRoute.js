@@ -29,6 +29,5 @@ router.post(
   wrapAsync(updateProfileImage)
 );
 
-// router.patch("/:id/profileImage", requireAuth, wrapAsync(UpdateprofileImage));
 
 module.exports = router;

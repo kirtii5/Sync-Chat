@@ -15,7 +15,7 @@ const ExpressError = require("./utils/ExpressError");
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Socket.IO server with CORS config
+// Socket.IO server with CORS config
 const io = new Server(server, {
     cors: {
         origin: "http://localhost:5173", // your frontend port
@@ -24,7 +24,7 @@ const io = new Server(server, {
     }
 });
 
-// ✅ Global Socket.IO connection
+//  Global Socket.IO connection
 io.on("connection", (socket) => {
     console.log("A user connected");
 
@@ -44,13 +44,13 @@ io.on("connection", (socket) => {
     });
 });
 
-// ✅ Make `io` accessible in routes via middleware
+//  Make `io` accessible in routes via middleware
 app.use((req, res, next) => {
     req.io = io;
     next();
 });
 
-// ✅ Middleware
+//  Middleware
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true
@@ -59,12 +59,12 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ✅ Routes
+//  Routes
 app.use("/api/users", userRoute);
 app.use("/api/chats", chatRoute);
 app.use("/api/message", messageRoute);
 
-// ✅ Error Handling Middleware
+//  Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     const status = err.status || 500;
@@ -80,7 +80,7 @@ mongoose.connect(process.env.MONGO_URL, {
     .then(() => console.log(" Connected to MongoDB"))
     .catch((err) => console.error("MongoDB Error:", err));
 
-// ✅ Start the server
+//  Start the server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@clerk/clerk-react";
 
 export default function ChatHeader({ selectedChat, onBack, onDelete }) {
+  console.log(selectedChat);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef();
   const { getToken } = useAuth();
@@ -20,16 +21,6 @@ export default function ChatHeader({ selectedChat, onBack, onDelete }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const handleDeleteChat = async () => {
     try {
       const token = await getToken();
@@ -37,12 +28,12 @@ export default function ChatHeader({ selectedChat, onBack, onDelete }) {
         `http://localhost:4000/api/chats/${selectedChat.chatId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // or pass getToken() from props
+            Authorization: `Bearer ${token}`,
           },
         }
       );
       toast.success("Chat deleted");
-      onDelete(); // Notify parent to remove chat
+      onDelete(); // Notify parent
       onBack();
     } catch (err) {
       toast.error("Failed to delete chat");
@@ -51,6 +42,15 @@ export default function ChatHeader({ selectedChat, onBack, onDelete }) {
       setShowDropdown(false);
     }
   };
+
+  // Clerk image filtering logic
+  const isClerkImage = (url) =>
+    typeof url === "string" && url.includes("img.clerk.com");
+
+  const profileImage =
+    selectedChat?.profileImage && !isClerkImage(selectedChat.profileImage)
+      ? selectedChat.profileImage
+      : undefined;
 
   return (
     <div className="p-4 border-b border-border flex items-center justify-between bg-card">
@@ -63,7 +63,7 @@ export default function ChatHeader({ selectedChat, onBack, onDelete }) {
 
         <Avatar className="h-9 w-9">
           <AvatarImage
-            src={selectedChat?.profileImage || undefined}
+            src={profileImage}
             alt={selectedChat?.username}
             className="object-cover"
           />

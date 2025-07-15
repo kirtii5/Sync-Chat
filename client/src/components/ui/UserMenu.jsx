@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useClerk, useUser } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/clerk-react";
+import { useUserProfile } from "@/components/UserProfileContext";
 
 import {
   DropdownMenu,
@@ -16,9 +17,19 @@ import { LogOut, Settings, User } from "lucide-react";
 
 export function UserMenu() {
   const { signOut } = useClerk();
-  const { user } = useUser();
   const navigate = useNavigate();
-  const userImageUrl = user.imageUrl;
+
+  const { profile } = useUserProfile();
+  const initials = profile?.first_name?.[0]?.toUpperCase() || "U";
+
+  // ✅ Dynamic check for Clerk image
+  const isClerkDefaultImage = (url) =>
+    typeof url === "string" && url.includes("img.clerk.com");
+
+  const profileImageToUse =
+    profile?.profileImage && !isClerkDefaultImage(profile.profileImage)
+      ? profile.profileImage
+      : undefined;
 
   const handleLogout = async () => {
     await signOut();
@@ -30,10 +41,11 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Avatar className="w-8 h-8 cursor-pointer">
           <AvatarImage
-            src={userImageUrl != user.imageUrl && user.imageUrl}
+            src={profileImageToUse}
             alt="User"
+            className="object-cover"
           />
-          <AvatarFallback>{user.firstName[0].toUpperCase()}</AvatarFallback>
+          <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 

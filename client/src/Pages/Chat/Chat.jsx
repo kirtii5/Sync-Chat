@@ -49,6 +49,7 @@ export default function Chat() {
     socket.current.on("new_message", (message) => {
       const isOwn = message.sender === currentUserMongoId;
 
+      // ✅ Add message to active chat
       if (selectedChat?.chatId === message.chatId) {
         setMessages((prev) => [
           ...prev,
@@ -61,27 +62,34 @@ export default function Chat() {
         ]);
       }
 
-      setChats((prev) => {
-        const updated = prev.map((chat) => {
+      // ✅ Update chat list
+      setChats((prevChats) => {
+        const updatedChats = prevChats.map((chat) => {
           if (chat.chatId === message.chatId) {
-            const unread =
-              selectedChat?.chatId === chat.chatId
-                ? 0
-                : (chat.unreadCount || 0) + 1;
+            const isActiveChat = selectedChat?.chatId === chat.chatId;
             return {
               ...chat,
               lastMessage: message.text,
               lastMessageTime: message.createdAt,
-              unreadCount: unread,
+              unreadCount: isActiveChat ? 0 : (chat.unreadCount || 0) + 1,
             };
           }
           return chat;
         });
 
-        return updated.sort(
+        return [...updatedChats].sort(
           (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
         );
       });
+
+      // ✅ Also update selectedChat (for sidebar preview)
+      if (selectedChat?.chatId === message.chatId) {
+        setSelectedChat((prev) => ({
+          ...prev,
+          lastMessage: message.text,
+          lastMessageTime: message.createdAt,
+        }));
+      }
     });
 
     return () => {
@@ -137,10 +145,11 @@ export default function Chat() {
             _id: other._id,
             username: other.username,
             profileImage: other.profileImage,
+            caption: other.caption || "Hey there!",
             chatId: chat._id,
-            lastMessage: chat.lastMessage?.text || "Start chat...",
+            lastMessage: chat.lastMessage?.text ?? "",
             lastMessageTime: chat.lastMessage?.createdAt || chat.updatedAt,
-            unreadCount: 0, // real-time will update
+            unreadCount: 0,
           };
         })
         .filter(Boolean)

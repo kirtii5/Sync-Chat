@@ -4,33 +4,36 @@ const ExpressError = require("../utils/ExpressError");
 
 // create chat or member
 const createChat = async (req, res) => {
-    const currentUserId = req.auth.userId; //from  requireAuth
-    const currentUser = await User.findOne({ clerkId: currentUserId });
-    const { otherUserId } = req.body;
-    if (!otherUserId)
-      throw new ExpressError(401, "other user id is requires");
+  const currentUserId = req.auth.userId; //from  requireAuth
+  const currentUser = await User.findOne({ clerkId: currentUserId });
+  const { otherUserId } = req.body;
+  if (!otherUserId)
+    throw new ExpressError(401, "other user id is requires");
 
-    let chat = await Chat.findOne({
-      members: { $all: [currentUser, otherUserId] },
-    });
+  let chat = await Chat.findOne({
+    members: { $all: [currentUser, otherUserId] },
+  });
 
-    if (chat) {
-      return res.status(200).json(chat);
-    }
-
-    chat = await Chat.create({
-      members: [currentUser._id, otherUserId],
-    });
-
+  if (chat) {
     return res.status(200).json(chat);
+  }
+
+  chat = await Chat.create({
+    members: [currentUser._id, otherUserId],
+  });
+
+  return res.status(200).json(chat);
 };
 
 //curr user chats
-const getChatsForUser = async(req, res) => {
-    let currentUserId = req.auth.userId;
-    const currentUser = await User.findOne({ clerkId: currentUserId });
-    let chats = await Chat.find({ members: currentUser}).populate("members", "username email");
-    res.status(200).json(chats);
+const getChatsForUser = async (req, res) => {
+  let currentUserId = req.auth.userId;
+  const currentUser = await User.findOne({ clerkId: currentUserId });
+  let chats = await Chat.find({ members: currentUser })
+    .populate("members", "username email profileImage caption")
+    .populate("lastMessage");
+
+  res.status(200).json(chats);
 }
 
 // will be used in future for group chats 
@@ -61,20 +64,20 @@ const getChatsForUser = async(req, res) => {
 // };
 
 //deleting chat for curr user if it want to 
-const deleteChat = async(req, res) => {
-    const chatId = await req.params.id;
-    const currentUser = req.auth.userId;
-    const currentUserDoc = await User.findOne({ clerkId: currentUser });
-    const currentUserId = currentUserDoc._id;
-    const chat = await Chat.findById(chatId);
-    if(!chat) {
-      throw new ExpressError(404, "chat not found");
-    }
-    if(!chat.members.includes(currentUserId)) {
-      throw new ExpressError(403, "you are not a member of this chat");
-    }
-    await chat.deleteOne();
-    res.status(200).json({ message: "Chat deleted successfully!" });
+const deleteChat = async (req, res) => {
+  const chatId = await req.params.id;
+  const currentUser = req.auth.userId;
+  const currentUserDoc = await User.findOne({ clerkId: currentUser });
+  const currentUserId = currentUserDoc._id;
+  const chat = await Chat.findById(chatId);
+  if (!chat) {
+    throw new ExpressError(404, "chat not found");
+  }
+  if (!chat.members.includes(currentUserId)) {
+    throw new ExpressError(403, "you are not a member of this chat");
+  }
+  await chat.deleteOne();
+  res.status(200).json({ message: "Chat deleted successfully!" });
 }
 
-module.exports = {createChat, getChatsForUser, deleteChat};
+module.exports = { createChat, getChatsForUser, deleteChat };

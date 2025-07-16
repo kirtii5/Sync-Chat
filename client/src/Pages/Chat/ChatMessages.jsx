@@ -16,7 +16,7 @@ export default function ChatMessages({ messages, isTyping, messagesEndRef }) {
     <ScrollArea className="flex-1 px-4 pt-4 pb-2 overflow-y-auto h-[calc(100vh-160px)]">
       {messages.map((msg, index) => (
         <div
-          key={msg.id || msg._id || msg.timestamp || index}
+          key={`${msg._id || msg.id}-${msg.timestamp}-${index}`}
           className={`flex ${
             msg.isOwn ? "justify-end" : "justify-start"
           } mb-5`}>

@@ -37,6 +37,8 @@ export default function ChatInput({
   newMessage,
   setNewMessage,
   handleSendMessage,
+  socket,
+  selectedChat,
 }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -71,7 +73,12 @@ export default function ChatInput({
         <Input
           placeholder="Type a message..."
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={(e) => {
+            setNewMessage(e.target.value);
+            if (socket?.current && selectedChat?.chatId) {
+              socket.current.emit("typing", selectedChat.chatId);
+            }
+          }}
           className="flex-1 rounded-2xl"
         />
 

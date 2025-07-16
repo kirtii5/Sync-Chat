@@ -248,7 +248,7 @@ export default function ChatSidebar({
                 </p>
               </div>
             </div>
-            <div className="text-right text-xs text-muted-foreground">
+            <div className="text-center text-xs text-muted-foreground">
               {user.lastMessageTime && formatTime(user.lastMessageTime)}
               {/* 🔵 Uncomment this if you want unread count badge */}
               {user.unreadCount > 0 && (

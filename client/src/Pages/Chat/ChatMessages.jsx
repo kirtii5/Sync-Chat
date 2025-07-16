@@ -12,6 +12,8 @@ const formatTime = (date) => {
 };
 
 export default function ChatMessages({ messages, isTyping, messagesEndRef }) {
+  console.log("🔥 isTyping:", isTyping);
+
   return (
     <ScrollArea className="flex-1 px-4 pt-4 pb-2 overflow-y-auto h-[calc(100vh-160px)]">
       {messages.map((msg, index) => (

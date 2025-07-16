@@ -10,10 +10,28 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [currentUserMongoId, setCurrentUserMongoId] = useState(null);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
   const { getToken, userId } = useAuth();
   const { user, isLoaded } = useUser();
   const socket = useRef(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("selectedChat");
+    if (stored) {
+      try {
+        setSelectedChat(JSON.parse(stored));
+      } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedChat) {
+      localStorage.setItem("selectedChat", JSON.stringify(selectedChat));
+    }
+  }, [selectedChat]);
 
   useEffect(() => {
     socket.current = io("http://localhost:4000");
@@ -24,7 +42,7 @@ export default function Chat() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isTyping]);
 
   useEffect(() => {
     if (isLoaded && userId) fetchChats();
@@ -49,7 +67,6 @@ export default function Chat() {
     socket.current.on("new_message", (message) => {
       const isOwn = message.sender === currentUserMongoId;
 
-      // ✅ Add message to active chat
       if (selectedChat?.chatId === message.chatId) {
         setMessages((prev) => [
           ...prev,
@@ -62,7 +79,6 @@ export default function Chat() {
         ]);
       }
 
-      // ✅ Update chat list
       setChats((prevChats) => {
         const updatedChats = prevChats.map((chat) => {
           if (chat.chatId === message.chatId) {
@@ -82,7 +98,6 @@ export default function Chat() {
         );
       });
 
-      // ✅ Also update selectedChat (for sidebar preview)
       if (selectedChat?.chatId === message.chatId) {
         setSelectedChat((prev) => ({
           ...prev,
@@ -96,6 +111,34 @@ export default function Chat() {
       socket.current.off("new_message");
     };
   }, [selectedChat, currentUserMongoId]);
+
+  useEffect(() => {
+    socket.current.on("typing", (chatId) => {
+      if (selectedChat?.chatId === chatId) {
+        setIsTyping(true);
+      }
+    });
+
+    socket.current.on("stop_typing", (chatId) => {
+      if (selectedChat?.chatId === chatId) {
+        setIsTyping(false);
+      }
+    });
+
+    return () => {
+      socket.current.off("typing");
+      socket.current.off("stop_typing");
+    };
+  }, [selectedChat]);
+
+  // Fallback: reset typing after timeout
+  useEffect(() => {
+    let fallback;
+    if (isTyping) {
+      fallback = setTimeout(() => setIsTyping(false), 4000);
+    }
+    return () => clearTimeout(fallback);
+  }, [isTyping]);
 
   const fetchMessages = async (chatId) => {
     try {
@@ -198,10 +241,19 @@ export default function Chat() {
         chatId: selectedChat.chatId,
       });
 
+      socket.current.emit("stop_typing", selectedChat.chatId);
       setNewMessage("");
     } catch (err) {
       console.error("❌ Message send failed:", err);
     }
+  };
+
+  const handleTyping = () => {
+    if (!socket.current || !selectedChat?.chatId) return;
+
+    socket.current.emit("typing", selectedChat.chatId);
+
+    socket.current.emit("stop_typing", selectedChat.chatId);
   };
 
   return (
@@ -212,13 +264,15 @@ export default function Chat() {
       setMessages={setMessages}
       newMessage={newMessage}
       setNewMessage={setNewMessage}
-      isTyping={false}
-      setIsTyping={() => {}}
+      isTyping={isTyping}
+      setIsTyping={setIsTyping}
       messagesEndRef={messagesEndRef}
       chatUsers={chats}
       setChats={setChats}
       fetchChats={fetchChats}
       handleSendMessage={handleSendMessage}
+      socket={socket}
+      handleTyping={handleTyping}
     />
   );
 }

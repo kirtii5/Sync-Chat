@@ -15,16 +15,14 @@ const ExpressError = require("./utils/ExpressError");
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Socket.IO server with CORS config
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173", // your frontend port
+        origin: "http://localhost:5173",
         methods: ["GET", "POST"],
         credentials: true
     }
 });
 
-// ✅ Global Socket.IO connection
 io.on("connection", (socket) => {
     console.log("🟢 A user connected");
 
@@ -39,18 +37,25 @@ io.on("connection", (socket) => {
         console.log("📨 Message sent to room:", chatId);
     });
 
+    socket.on("typing", (chatId) => {
+        socket.to(chatId).emit("typing", chatId);
+    });
+
+    socket.on("stop_typing", (chatId) => {
+        socket.to(chatId).emit("stop_typing", chatId);
+    });
+
     socket.on("disconnect", () => {
         console.log("🔴 A user disconnected");
     });
 });
 
-// ✅ Make `io` accessible in routes via middleware
 app.use((req, res, next) => {
     req.io = io;
     next();
 });
 
-// ✅ Middleware
+
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true
@@ -59,12 +64,12 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ✅ Routes
+
 app.use("/api/users", userRoute);
 app.use("/api/chats", chatRoute);
 app.use("/api/message", messageRoute);
 
-// ✅ Error Handling Middleware
+
 app.use((err, req, res, next) => {
     console.error(err.stack);
     const status = err.status || 500;
@@ -72,7 +77,6 @@ app.use((err, req, res, next) => {
     res.status(status).json({ message });
 });
 
-// ✅ Connect to MongoDB
 mongoose.connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -80,7 +84,6 @@ mongoose.connect(process.env.MONGO_URL, {
     .then(() => console.log("✅ Connected to MongoDB"))
     .catch((err) => console.error("❌ MongoDB Error:", err));
 
-// ✅ Start the server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
     console.log(`🚀 Server listening on http://localhost:${PORT}`);

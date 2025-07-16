@@ -57,8 +57,9 @@ export default function ChatHeader({ selectedChat, onBack, onDelete }) {
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="md:hidden mr-1 text-xl text-muted-foreground">
-          ←
+          className="text-muted-foreground hover:text-primary flex items-center gap-1 mr-2">
+          <span className="text-xl">←</span>
+          <span className="text-sm hidden md:inline"></span>
         </button>
 
         <Avatar className="h-9 w-9">

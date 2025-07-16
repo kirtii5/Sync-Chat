@@ -32,20 +32,16 @@ const sendMessage = async (req, res) => {
   if (!chatId) throw new ExpressError(400, "Chat ID required");
   if (!text) throw new ExpressError(400, "Text is required");
 
-  // 1. Create the message
   const message = await Message.create({
     chatId,
     sender: senderInfo._id,
     text,
   });
 
-  // ✅ 2. Update lastMessage on the Chat document
   await Chat.findByIdAndUpdate(chatId, { lastMessage: message._id });
 
-  // 3. Emit via socket
   req.io.to(chatId).emit("new_message", message);
 
-  // 4. Return message
   res.status(200).json(message);
 };
 

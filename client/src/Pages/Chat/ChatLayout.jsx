@@ -18,6 +18,7 @@ export default function ChatLayout({
   chatUsers,
   setChats,
   getToken,
+  socket,
 }) {
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
@@ -27,7 +28,11 @@ export default function ChatLayout({
   };
   const handleBack = () => {
     setIsMobileChatOpen(false);
-    setTimeout(() => setSelectedChat(null), 200);
+    setTimeout(
+      () => setSelectedChat(null),
+      localStorage.removeItem("selectedChat"),
+      200
+    );
   };
 
   const handleDeleteChat = () => {
@@ -72,6 +77,8 @@ export default function ChatLayout({
               newMessage={newMessage}
               setNewMessage={setNewMessage}
               handleSendMessage={handleSendMessage}
+              socket={socket}
+              selectedChat={selectedChat}
             />
           </div>
         )}

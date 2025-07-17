@@ -60,7 +60,49 @@ const getMessagesByChatId = async (req, res) => {
   res.status(200).json(messages);
 };
 
+
+const deleteMessagesForMe = async (req, res) => {
+  const { messageIds } = req.body; 
+  const userId = req.auth.userId;
+
+  const user = await User.findOne({ clerkId: userId });
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const idsArray = Array.isArray(messageIds) ? messageIds : [messageIds];
+
+  for (const messageId of idsArray) {
+    const message = await Message.findById(messageId);
+    if (!message) continue; 
+
+    if (!message.deletedFor.includes(user._id)) {
+      message.deletedFor.push(user._id);
+      await message.save();
+    }
+
+    const chat = await Chat.findById(message.chatId);
+    if (!chat) continue;
+
+    const allMembers = chat.members.map(id => id.toString());
+    const whoDeleted = message.deletedFor.map(id => id.toString());
+
+    const everyoneDeleted = allMembers.every(memberId =>
+      whoDeleted.includes(memberId)
+    );
+
+    if (everyoneDeleted) {
+      await Message.findByIdAndDelete(messageId);
+    }
+  }
+
+  res.json({ success: true, message: "Messages deleted for you" });
+};
+
+
+
 module.exports = {
   sendMessage,
   getMessagesByChatId,
+  deleteMessagesForMe,
 };

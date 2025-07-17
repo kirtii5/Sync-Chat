@@ -18,7 +18,7 @@ const server = http.createServer(app);
 // Socket.IO server with CORS config
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173", // your frontend port
+        origin: "http://localhost:5173", 
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -26,18 +26,18 @@ const io = new Server(server, {
 
 //  Global Socket.IO connection
 io.on("connection", (socket) => {
-    console.log("A user connected");
+    // console.log("A user connected");
 
     socket.on("join_chat", (chatId) => {
         socket.join(chatId);
-        console.log(`User joined chat: ${chatId}`);
+        // console.log(`User joined chat: ${chatId}`);
     });
 
-    socket.on("send_message", (messageData) => {
-        const { chatId, ...message } = messageData;
-        io.to(chatId).emit("new_message", message);
-        console.log(" Message sent to room:", chatId);
-    });
+    // socket.on("send_message", (messageData) => {
+    //     const { chatId, ...message } = messageData;
+    //     io.to(chatId).emit("new_message", message);
+    //     console.log(" Message sent to room:", chatId);
+    // });
 
     socket.on("disconnect", () => {
         console.log(" A user disconnected");

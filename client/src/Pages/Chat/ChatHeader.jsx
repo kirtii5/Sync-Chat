@@ -76,9 +76,6 @@ export default function ChatHeader({ selectedChat, onBack, onDelete }) {
           <h2 className="text-sm font-bold">
             {selectedChat?.username || "Unknown User"}
           </h2>
-          <p className="text-xs text-muted-foreground">
-            {selectedChat?.isOnline ? "Online" : "Last seen recently"}
-          </p>
         </div>
       </div>
 

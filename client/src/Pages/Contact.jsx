@@ -1,5 +1,7 @@
 import { Mail, SendHorizonal, User } from "lucide-react";
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function Contact() {
   const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
@@ -8,7 +10,6 @@ export default function Contact() {
     email: "",
     message: "",
   });
-  const [status, setStatus] = useState({ type: "", message: "" });
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -16,7 +17,6 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus({ type: "", message: "" });
 
     const res = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
@@ -26,13 +26,10 @@ export default function Contact() {
 
     const data = await res.json();
     if (data.success) {
-      setStatus({ type: "success", message: "Message sent successfully!" });
+      toast.success("Message sent successfully!");
       setFormData({ name: "", email: "", message: "" });
     } else {
-      setStatus({
-        type: "error",
-        message: "Something went wrong. Please try again.",
-      });
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
@@ -47,7 +44,7 @@ export default function Contact() {
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className=" text-sm font-medium mb-1 flex items-center gap-1">
+            <label className="text-sm font-medium mb-1 flex items-center gap-1">
               <User className="w-4 h-4 text-[#8C52FF]" /> Name
             </label>
             <input
@@ -62,7 +59,7 @@ export default function Contact() {
           </div>
 
           <div>
-            <label className=" text-sm font-medium mb-1 flex items-center gap-1">
+            <label className="text-sm font-medium mb-1 flex items-center gap-1">
               <Mail className="w-4 h-4 text-[#8C52FF]" /> Email
             </label>
             <input
@@ -88,24 +85,15 @@ export default function Contact() {
               placeholder="How can we help you?"></textarea>
           </div>
 
-          <button
+          <motion.button
             type="submit"
-            className="flex items-center gap-2 justify-center bg-[#8C52FF] hover:bg-[#7A45E5] text-white px-6 py-3 rounded-xl w-full text-lg font-medium transition-all">
+            className="flex items-center gap-2 justify-center bg-[#8C52FF] hover:bg-[#7A45E5] text-white px-6 py-3 rounded-xl w-full text-lg font-medium"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 300 }}>
             <SendHorizonal className="w-5 h-5" /> Send Message
-          </button>
+          </motion.button>
         </form>
-
-        {/* Notification */}
-        {status.message && (
-          <div
-            className={`mt-4 text-center text-sm font-medium p-2 rounded-xl ${
-              status.type === "success"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}>
-            {status.message}
-          </div>
-        )}
       </div>
     </div>
   );

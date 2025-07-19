@@ -15,6 +15,7 @@ import Profile from "./Pages/Profile";
 import Navbar from "./components/ui/Navbar";
 import ProtectedRoute from "./components/ui/ProtectedRoute";
 import { Toaster } from "sonner";
+import { ToastContainer } from "react-toastify";
 
 // Wrapper component to use hooks outside Router
 function AppWrapper() {
@@ -72,6 +73,7 @@ function AppWrapper() {
 function App() {
   return (
     <Router>
+      <ToastContainer position="top-right" autoClose={3000} />
       <AppWrapper />
     </Router>
   );

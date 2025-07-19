@@ -19,6 +19,9 @@ export default function ChatLayout({
   setChats,
   getToken,
   socket,
+  handleDeleteMessages,
+  currentUserMongoId,
+  unreadCounts,
 }) {
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
@@ -54,6 +57,7 @@ export default function ChatLayout({
             setSelectedChat={handleChatSelect}
             chatUsers={chatUsers}
             setChats={setChats}
+            unreadCounts={unreadCounts}
           />
         </div>
 
@@ -72,6 +76,8 @@ export default function ChatLayout({
               messages={messages}
               isTyping={isTyping}
               messagesEndRef={messagesEndRef}
+              onDeleteMessages={handleDeleteMessages}
+              currentUserMongoId={currentUserMongoId}
             />
             <ChatInput
               newMessage={newMessage}

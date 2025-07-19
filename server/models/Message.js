@@ -9,7 +9,13 @@ const messageSchema = new mongoose.Schema(
       required: true,
     }, // Who sent it
     text: { type: String, required: true }, // The message text
-  },
+  
+   deletedFor: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ], },
   { timestamps: true }
 ); // Automatically adds createdAt & updatedAt
 

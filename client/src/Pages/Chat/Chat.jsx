@@ -206,6 +206,38 @@ export default function Chat() {
     }
   };
 
+  const handleDeleteMessages = async (messageIds) => {
+    try {
+      const token = await getToken();
+      await axios.post(
+        "http://localhost:4000/api/message/deleteForMe",
+        {
+          messageIds,
+          chatId: selectedChat.chatId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Optimistically update UI
+      setMessages((prev) =>
+        prev.map((msg) =>
+          messageIds.includes(msg._id)
+            ? {
+                ...msg,
+                deletedFor: [...(msg.deletedFor || []), currentUserMongoId],
+              }
+            : msg
+        )
+      );
+    } catch (err) {
+      console.error("Failed to delete messages", err);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChat) return;
 
@@ -273,6 +305,8 @@ export default function Chat() {
       handleSendMessage={handleSendMessage}
       socket={socket}
       handleTyping={handleTyping}
+      handleDeleteMessages={handleDeleteMessages}
+      currentUserMongoId={currentUserMongoId}
     />
   );
 }

@@ -4,6 +4,7 @@ import "./index.css";
 import { ClerkProvider } from "@clerk/clerk-react";
 import App from "./App.jsx";
 import { UserProfileProvider } from "./components/UserProfileContext";
+import "react-toastify/dist/ReactToastify.css";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 

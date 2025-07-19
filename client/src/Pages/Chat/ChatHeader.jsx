@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useAuth } from "@clerk/clerk-react";
 
 export default function ChatHeader({ selectedChat, onBack, onDelete }) {
-  console.log(selectedChat);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef();
   const { getToken } = useAuth();

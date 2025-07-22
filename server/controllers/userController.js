@@ -8,7 +8,6 @@ const getProfile = (req, res) => {
   res.json({ message: `Hello User ${userId}` });
 };
 
-
 const getPublicContent = (req, res) => {
   if (req.auth?.userId) {
     res.json({ message: `Welcome back, User ${req.auth.userId}` });

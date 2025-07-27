@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export default function Profile() {
     const fetchProfile = async () => {
       try {
         const token = await getToken();
-        const res = await axios.get("http://localhost:4000/api/users/profile", {
+        const res = await axios.get(`${SERVER_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

@@ -3,6 +3,7 @@ import ChatLayout from "./ChatLayout";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { io } from "socket.io-client";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 export default function Chat() {
   const [selectedChat, setSelectedChat] = useState(null);
@@ -34,7 +35,7 @@ export default function Chat() {
   }, [selectedChat]);
 
   useEffect(() => {
-    socket.current = io("http://localhost:4000");
+    socket.current = io(`${SERVER_URL}`);
     return () => {
       socket.current.disconnect();
     };
@@ -143,12 +144,9 @@ export default function Chat() {
   const fetchMessages = async (chatId) => {
     try {
       const token = await getToken();
-      const res = await axios.get(
-        `http://localhost:4000/api/message/${chatId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get(`${SERVER_URL}/api/message/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const fetched = res.data.map((msg) => ({
         ...msg,
@@ -166,7 +164,7 @@ export default function Chat() {
   const fetchChats = async () => {
     try {
       const token = await getToken();
-      const res = await axios.get("http://localhost:4000/api/chats/Allchats", {
+      const res = await axios.get(`${SERVER_URL}/api/chats/Allchats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -210,7 +208,7 @@ export default function Chat() {
     try {
       const token = await getToken();
       await axios.post(
-        "http://localhost:4000/api/message/deleteForMe",
+        `${SERVER_URL}/api/message/deleteForMe`,
         {
           messageIds,
           chatId: selectedChat.chatId,
@@ -244,7 +242,7 @@ export default function Chat() {
     try {
       const token = await getToken();
       const res = await axios.post(
-        "http://localhost:4000/api/message",
+        `${SERVER_URL}/api/message`,
         {
           chatId: selectedChat.chatId,
           text: newMessage,

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth, useUser } from "@clerk/clerk-react";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const UserProfileContext = createContext();
 
@@ -14,7 +15,7 @@ export const UserProfileProvider = ({ children }) => {
     const fetchProfile = async () => {
       try {
         const token = await getToken();
-        const res = await axios.get("http://localhost:4000/api/users/profile", {
+        const res = await axios.get(`${SERVER_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile(res.data);

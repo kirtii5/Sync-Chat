@@ -7,6 +7,7 @@ import axios from "axios";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { User, MessageCircle, Search, X } from "lucide-react";
 import { UserMenu } from "@/components/ui/UserMenu";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 // Format timestamp nicely
 const formatTime = (dateStr) => {
@@ -57,12 +58,9 @@ export default function ChatSidebar({
 
       try {
         const token = await getToken();
-        const res = await axios.get(
-          "http://localhost:4000/api/users/allUsers",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await axios.get(`${SERVER_URL}/api/users/allUsers`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         const filtered = res.data.filter(
           (u) =>
@@ -86,12 +84,9 @@ export default function ChatSidebar({
     try {
       const token = await getToken();
 
-      const userRes = await axios.get(
-        "http://localhost:4000/api/users/profile",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const userRes = await axios.get(`${SERVER_URL}/api/users/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const currentUserInDB = userRes.data;
       if (!currentUserInDB || !currentUserInDB._id) {
@@ -100,7 +95,7 @@ export default function ChatSidebar({
       }
 
       const res = await axios.post(
-        "http://localhost:4000/api/chats/chat",
+        `${SERVER_URL}/api/chats/chat`,
         { otherUserId: user._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );

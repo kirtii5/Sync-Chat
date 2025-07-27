@@ -4,6 +4,7 @@ import { Phone, Video, Info, MoreVertical, User } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/clerk-react";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 export default function ChatHeader({ selectedChat, onBack, onDelete }) {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -23,14 +24,11 @@ export default function ChatHeader({ selectedChat, onBack, onDelete }) {
   const handleDeleteChat = async () => {
     try {
       const token = await getToken();
-      await axios.delete(
-        `http://localhost:4000/api/chats/${selectedChat.chatId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.delete(`${SERVER_URL}/api/chats/${selectedChat.chatId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       toast.success("Chat deleted");
       onDelete(); // Notify parent
       onBack();

@@ -18,7 +18,7 @@ const server = http.createServer(app);
 // Socket.IO server with CORS config
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: ["http://localhost:5173", "https://sync-chat-project.netlify.app"],
         methods: ["GET", "POST"],
         credentials: true
     }

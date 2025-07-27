@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",");
 
 const userRoute = require("./routes/userRoute");
 const chatRoute = require("./routes/chatRoute");
@@ -18,7 +19,7 @@ const server = http.createServer(app);
 // Socket.IO server with CORS config
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:5173", "https://sync-chat-project.netlify.app"],
+        origin: allowedOrigins,
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -60,7 +61,12 @@ app.use((req, res, next) => {
 
 //  Middleware
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
 }));
 app.use(cookieParser());

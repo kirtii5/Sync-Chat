@@ -59,7 +59,7 @@ export default function Profile() {
       formData.append("ProfileImage", file);
 
       const res = await axios.post(
-        "http://localhost:4000/api/users/upload-profile",
+        `${SERVER_URL}/api/users/upload-profile`,
         formData,
         {
           headers: {

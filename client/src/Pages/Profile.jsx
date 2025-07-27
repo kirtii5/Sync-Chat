@@ -81,7 +81,7 @@ export default function Profile() {
     try {
       const token = await getToken();
       await axios.patch(
-        `http://localhost:4000/api/users/${userId}/caption`,
+        `${SERVER_URL}/api/users/${userId}/caption`,
         { caption },
         {
           headers: { Authorization: `Bearer ${token}` },
